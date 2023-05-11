@@ -85,7 +85,7 @@ main (int argc, char **argv)
 	}
 
 	svc_run ();
-	fprintf (stderr, "%s", "svc_run returned");
+	//fprintf (stderr, "%s", "svc_run returned");
 	exit (1);
 	/* NOTREACHED */
 }
