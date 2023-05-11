@@ -7,14 +7,10 @@
 #include "calculator.h"
 
 int *
-calculate_1_svc(calculator_input *argp,  struct svc_req *rqstp)
+calculate_1_svc(calculator_input *argp, struct svc_req *rqstp)
 {
-    /*
-     * insert server code here
-     */
-    printf("Calculate Procedure Called\n");
-
     static int result;
+    printf("Calculate Procedure Called\n");
     printf("Received operator: %c\n", *argp->op);
     switch (*argp->op) {
         case '+':
@@ -27,7 +23,7 @@ calculate_1_svc(calculator_input *argp,  struct svc_req *rqstp)
             result = argp->num1 * argp->num2;
             break;
         case '/':
-            if(argp->num2 == 0) {
+            if (argp->num2 == 0) {
                 printf("Division by zero\n");
                 exit(1);
             }
@@ -39,10 +35,11 @@ calculate_1_svc(calculator_input *argp,  struct svc_req *rqstp)
             break;
     }
 
+    static int count = 0;
+    if (++count == 1) {
+        svc_exit();
+    }
+
     // send the result back to the client
     return (&result);
-
-    // exit the procedure and send the result to the client
-    exit(0);
-
 }
