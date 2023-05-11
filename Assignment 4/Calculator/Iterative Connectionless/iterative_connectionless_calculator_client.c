@@ -23,33 +23,30 @@ void calculator_prog_1(char *host)
 
     int num1, num2;
     char op;
-    while (1)
+    printf("Enter first number: ");
+    scanf("%d", &num1);
+    printf("Choose the operator you would like to use:\n");
+    printf("+ (Addition)\n");
+    printf("- (Subtraction)\n");
+    printf("* (Multiplication)\n");
+    printf("/ (Division)\n");
+    scanf(" %c", &op); // note the space before %c to consume whitespace
+    printf("Enter second number: ");
+    scanf("%d", &num2);
+
+    calculate_1_arg1.num1 = num1;
+    calculate_1_arg1.op = &op;
+    calculate_1_arg1.num2 = num2;
+
+    result_1 = calculate_1(&calculate_1_arg1, clnt);
+    if (result_1 == (int *)NULL)
     {
-        printf("Enter first number: ");
-        scanf("%d", &num1);
-        printf("Choose the operator you would like to use:\n");
-        printf("+ (Addition)\n");
-        printf("- (Subtraction)\n");
-        printf("* (Multiplication)\n");
-        printf("/ (Division)\n");
-        scanf(" %c", &op); // note the space before %c to consume whitespace
-        printf("Enter second number: ");
-        scanf("%d", &num2);
-
-        calculate_1_arg1.num1 = num1;
-        calculate_1_arg1.op = &op;
-        calculate_1_arg1.num2 = num2;
-
-        result_1 = calculate_1(&calculate_1_arg1, clnt);
-        if (result_1 == (int *)NULL)
-        {
-            clnt_perror(clnt, "call failed");
-        }
-        else
-        {
-            printf("Result: %d\n", *result_1);
-			printf("\n");
-        }
+        clnt_perror(clnt, "call failed");
+    }
+    else
+    {
+        printf("Result: %d\n", *result_1);
+        printf("\n");
     }
 
 #ifndef DEBUG
