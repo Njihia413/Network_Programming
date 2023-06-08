@@ -20,12 +20,14 @@ int main(int argc, char const *argv[]) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
+    printf("Socket created successfully.\n");
 
     // Forcefully attaching socket to the port 8080
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
+
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
@@ -35,6 +37,7 @@ int main(int argc, char const *argv[]) {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
+    printf("Socket binded to port %d.\n", PORT);
 
     // Start listening for client connections
     if (listen(server_fd, 5) < 0) {
@@ -51,17 +54,17 @@ int main(int argc, char const *argv[]) {
             perror("accept failed");
             exit(EXIT_FAILURE);
         }
+        printf("Client %d connected.\n", client_num+1);
 
         // Create a child process to handle the client request
         if (fork() == 0) {
-            printf("Client %d connected\n", client_num+1);
+            close(server_fd);  // child process doesn't need the listening socket
 
-            while (1)
-            {
+            while (1) {
                 // Receive data from the client
                 valread = read(new_socket, buffer, 1024);
                 if (valread == 0) {
-                    printf("Client number %d disconnected\n", client_num+1);
+                    printf("Client number %d disconnected.\n", client_num+1);
                     break;
                 }
                 printf("Data received from client %d: %s\n", client_num+1, buffer);
@@ -95,20 +98,22 @@ int main(int argc, char const *argv[]) {
 
                 // Send the response back to the client
                 send(new_socket, response, strlen(response), 0);
-                printf("Response sent: %s", response);
+                printf("Response sent to client %d: %s\n", client_num+1, response);
 
                 // Clear the buffer
                 memset(buffer, 0, sizeof(buffer));
             }
 
+            close(new_socket);  // close the client socket in the child process
             exit(EXIT_SUCCESS);
         }
 
         client_num++;
+        close(new_socket);  // close the client socket in the parent process
     }
 
-    // Close the socket
-    close(new_socket);
+    // Close the listening socket
+    close(server_fd);
 
     return 0;
 }
