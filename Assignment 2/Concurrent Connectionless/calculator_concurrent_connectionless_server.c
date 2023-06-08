@@ -20,12 +20,14 @@ int main(int argc, char const *argv[]) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
+    printf("Socket created successfully.\n");
 
     // Forcefully attaching socket to the port 8080
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
+    
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
@@ -35,14 +37,14 @@ int main(int argc, char const *argv[]) {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
+    printf("Socket binded to port %d.\n", PORT);
 
     int client_num = 0;  // variable to keep track of the client number
 
     while (1) {
         printf("Waiting for data...\n");
-        
-        while (1)
-        {
+
+        while (1) {
             // Receive data from the client
             valread = recvfrom(server_fd, buffer, 1024, 0, (struct sockaddr *)&address, (socklen_t*)&addrlen);
             printf("Data received from client %d: %s\n", client_num+1, buffer);
@@ -78,7 +80,7 @@ int main(int argc, char const *argv[]) {
 
                 // Send the response back to the client
                 sendto(server_fd, response, strlen(response), 0, (struct sockaddr *)&address, addrlen);
-                printf("Response sent: %s", response);
+                printf("Response sent to client %d: %s\n", client_num+1, response);
 
                 // Clear the buffer
                 memset(buffer, 0, sizeof(buffer));
@@ -89,7 +91,7 @@ int main(int argc, char const *argv[]) {
 
             client_num++;  // increment the client number after receiving data from the client
         }
-        
+
     }
 
     // Close the socket
