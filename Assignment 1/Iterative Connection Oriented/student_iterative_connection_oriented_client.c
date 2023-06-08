@@ -84,5 +84,5 @@ int main () {
         printf("%s\n",buffer );
         printf("\n");
     }
-return 0;
+    return 0;
 }
