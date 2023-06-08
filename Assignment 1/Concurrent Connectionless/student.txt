@@ -2,11 +2,7 @@ Serial Number			 Registration Number					 Name
 413						 P15/140890/2020						 Maureen Njihia
 567						 P15/139992/2020						 Joanne Gitari
 333						 P15/139974/2020						 Charles Angela
-687						 P15/140158/2020						 Magdalene Muthoni
-512						 P15/140840/2020						 Atara Njihia
-999						 P15/111222/2020						 Angelique Boyer
-222						 P15/333444/2020						 Lyn Muthoni
-781						 P15/140471/2020						 Jonah Kanyiri
-472						 P15/140472/2020						 David Kilolo
-444						 P15/123456/2020						 Tarey Njihia
-
+840						 P15/140512/2020						 Atara Njihia
+158						 P15/140687/2020						 Magdalene Muthoni
+222						 P15/111222/2020						 Tarey Njihia
+999						 P15/222333/2020						 Angelique Boyer

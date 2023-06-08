@@ -109,8 +109,6 @@ int main()
 
     printf("Socket binded to port %d.\n", PORT);
 
-    int client_number = 1; // Initialize client number
-
     while (1)
     {
         printf("Waiting for data...\n");
@@ -136,7 +134,7 @@ int main()
             // Loop to keep reading data until client closes connection
             while (1)
             {
-                printf("Data received from client %d: %s\n", client_number, buffer);
+                printf("Data received from client: %s\n", buffer);
 
                 // Parse student data from incoming message
                 sscanf(buffer, "%d %s %s %s", &student.serialNumber, student.regNumber, student.firstName, student.lastName);
@@ -156,6 +154,7 @@ int main()
                     fprintf(file, "%d\t\t\t\t\t\t %s\t\t\t\t\t\t %s %s\n", student.serialNumber, student.regNumber, student.firstName, student.lastName);
                     fflush(file);
                     printf("Student Added Successfully\n");
+                    printf("\n");
                 }
 
                 // Clear the buffer
@@ -171,11 +170,6 @@ int main()
 
             // Terminate the child process
             exit(EXIT_SUCCESS);
-        }
-        else
-        {
-            // Parent process
-            client_number++; // Increment client number
         }
     }
 
