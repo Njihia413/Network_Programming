@@ -46,13 +46,15 @@ int main(int argc, char const *argv[]) {
     }
     printf("Server is listening on port %d...\n", PORT);
 
+    int client_num = 0;
+
     while (1) {
         // Accept incoming connection
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
             perror("accept failed");
             exit(EXIT_FAILURE);
         }
-        printf("Connection established.\n");
+        printf("Connection established with client %d.\n", client_num+1);
 
         // Loop to keep reading data until client closes connection
         while (1) {
@@ -62,10 +64,10 @@ int main(int argc, char const *argv[]) {
 
             // Check if connection closed by client
             if (valread == 0) {
-                printf("Connection closed by client.\n");
+                printf("Connection closed by client %d.\n", client_num+1);
                 break;
             }
-            printf("Data received from client: %s\n", buffer);
+            printf("Data received from client %d: %s\n", client_num+1, buffer);
 
             // Parse the input from the client
             int num1, num2;
@@ -96,11 +98,12 @@ int main(int argc, char const *argv[]) {
 
             // Send the response back to the client
             send(new_socket, response, strlen(response), 0);
-            printf("Response sent: %s\n", response);
+            printf("Response sent to client %d: %s\n", client_num+1, response);
         }
 
         // Close the connection
         close(new_socket);
+        client_num++;
     }
 
     return 0;
