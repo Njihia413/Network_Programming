@@ -4,9 +4,11 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <errno.h>
 
 #define MAX_NAME_LENGTH 50
 #define PORT 8080
+#define TIMEOUT_SECONDS 5
 
 struct Student
 {
@@ -17,25 +19,14 @@ struct Student
     char lastName[MAX_NAME_LENGTH];
 };
 
-int main(int argc, char const *argv[])
-{
+int main () {
+    struct sockaddr_in address;
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
     char buffer[1024] = {0};
     struct Student student;
 
-    // Get student details from user input
-    printf("Enter the student's details:\n");
-    printf("Serial Number: ");
-    scanf("%d", &student.serialNumber);
-    printf("Registration Number: ");
-    scanf("%s", student.regNumber);
-    printf("First Name: ");
-    scanf("%s", student.firstName);
-    printf("Last Name: ");
-    scanf("%s", student.lastName);
-
-    // Create a socket file descriptor
+    // Create socket file descriptor
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
     {
         printf("\n Socket creation error \n");
@@ -54,12 +45,38 @@ int main(int argc, char const *argv[])
         return -1;
     }
 
-    // Convert the student details to a buffer
-    sprintf(buffer, "%d %s %s %s", student.serialNumber, student.regNumber, student.firstName, student.lastName);
+    // Set a timeout for the socket
+    struct timeval timeout;
+    timeout.tv_sec = TIMEOUT_SECONDS;
+    timeout.tv_usec = 0;
+    if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0)
+    {
+        printf("\nError setting timeout: %s\n", strerror(errno));
+        return -1;
+    }
 
-    // Send the buffer to the server
-    sendto(sock, buffer, strlen(buffer), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-    printf("Student data sent successfully.\n");
+    while(1) {
+        // Get the student's details from the user
+        printf("Enter the student's details:\n");
+        printf("Serial Number: ");
+        scanf("%d", &student.serialNumber);
+        printf("Registration Number: ");
+        scanf("%s", student.regNumber);
+        printf("First Name: ");
+        scanf("%s", student.firstName);
+        printf("Last Name: ");
+        scanf("%s", student.lastName);
 
+        // Send the student's details to the server
+        sprintf(buffer, "%d %s %s %s", student.serialNumber, student.regNumber, student.firstName, student.lastName);
+        sendto(sock , buffer , strlen(buffer) , 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+        printf("Student data sent successfully.\n");
+
+        // Receive the response from the server
+        int serv_addr_len = sizeof(serv_addr);
+        valread = recvfrom(sock, buffer, 1024, 0, (struct sockaddr *)&serv_addr, &serv_addr_len);
+        printf("%s\n",buffer );
+        printf("\n");
+    }
     return 0;
 }
