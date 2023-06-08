@@ -125,6 +125,8 @@ int main()
 
     printf("Server is listening on port %d...\n", PORT);
 
+    int client_number = 1; // Initialize client number
+
     while (1)
     {
         int new_socket;
@@ -134,7 +136,7 @@ int main()
             exit(EXIT_FAILURE);
         }
 
-        printf("Connection established.\n");
+        printf("Connection established with client %d.\n", client_number);
 
         // Fork a child process to handle the client request
         pid_t child_pid = fork();
@@ -159,10 +161,10 @@ int main()
                 // Check if connection closed by client
                 if (valread == 0)
                 {
-                    printf("Connection closed by client.\n");
+                    printf("Connection closed by client %d.\n", client_number);
                     break;
                 }
-                printf("Data received from client: %s\n", buffer);
+                printf("Data received from client %d: %s\n", client_number, buffer);
 
                 // Parse student data from incoming message
                 sscanf(buffer, "%d %s %s %s", &student.serialNumber, student.regNumber, student.firstName, student.lastName);
@@ -194,6 +196,7 @@ int main()
             // Parent process
             // Close the new_socket in the parent process
             close(new_socket);
+            client_number++; // Increment client number
         }
     }
 
