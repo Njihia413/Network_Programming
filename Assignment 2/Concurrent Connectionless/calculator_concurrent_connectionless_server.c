@@ -39,15 +39,13 @@ int main(int argc, char const *argv[]) {
     }
     printf("Socket binded to port %d.\n", PORT);
 
-    int client_num = 0;  // variable to keep track of the client number
-
     while (1) {
         printf("Waiting for data...\n");
 
         while (1) {
             // Receive data from the client
             valread = recvfrom(server_fd, buffer, 1024, 0, (struct sockaddr *)&address, (socklen_t*)&addrlen);
-            printf("Data received from client %d: %s\n", client_num+1, buffer);
+            printf("Data received from client: %s\n", buffer);
 
             // Create a child process to handle the client request
             if (fork() == 0) {
@@ -80,17 +78,15 @@ int main(int argc, char const *argv[]) {
 
                 // Send the response back to the client
                 sendto(server_fd, response, strlen(response), 0, (struct sockaddr *)&address, addrlen);
-                printf("Response sent to client %d: %s\n", client_num+1, response);
+                printf("Response sent to client: %s\n", response);
 
                 // Clear the buffer
                 memset(buffer, 0, sizeof(buffer));
-
-                // Close the child process
-                exit(EXIT_SUCCESS);
             }
-
-            client_num++;  // increment the client number after receiving data from the client
         }
+
+        // Close the child process
+        exit(EXIT_SUCCESS);
 
     }
 
