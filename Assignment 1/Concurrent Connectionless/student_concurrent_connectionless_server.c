@@ -4,6 +4,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define MAX_NAME_LENGTH 50
 #define FILENAME "student.txt"
@@ -60,7 +62,7 @@ int checkIfRegNumberExists(char *regNumber)
 int main()
 {
     struct sockaddr_in address;
-    int server_fd, valread;
+    int server_fd;
     int addrlen = sizeof(address);
     char buffer[BUFFER_SIZE] = {0};
     struct Student student;
@@ -107,44 +109,78 @@ int main()
 
     printf("Socket binded to port %d.\n", PORT);
 
-    // Wait for data to be received from the client
+    int client_number = 1; // Initialize client number
+
     while (1)
     {
         printf("Waiting for data...\n");
-
-        // Clear the buffer
-        memset(buffer, 0, BUFFER_SIZE);
-
         // Receive data from the client
+        memset(buffer, 0, BUFFER_SIZE);
         if (recvfrom(server_fd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&address, (socklen_t *)&addrlen) < 0)
         {
             perror("recvfrom failed");
             exit(EXIT_FAILURE);
         }
 
-        printf("Data received: %s\n", buffer);
+        // Fork a child process to handle the client request
+        pid_t child_pid = fork();
 
-        // Parse the received data
-        sscanf(buffer, "%d %s %s %s", &student.serialNumber, student.regNumber, student.firstName, student.lastName);
-
-        // Check if the student already exists
-        if (checkIfSerialNumberExists(student.serialNumber))
+        if (child_pid < 0)
         {
-            printf("Error: Student with the same serial number already exists.\n");
+            perror("fork failed");
+            exit(EXIT_FAILURE);
         }
-        else if (checkIfRegNumberExists(student.regNumber))
+        else if (child_pid == 0)
         {
-            printf("Error: Student with the same registration number already exists.\n");
+            // Child process
+            // Loop to keep reading data until client closes connection
+            while (1)
+            {
+                printf("Data received from client %d: %s\n", client_number, buffer);
+
+                // Parse student data from incoming message
+                sscanf(buffer, "%d %s %s %s", &student.serialNumber, student.regNumber, student.firstName, student.lastName);
+
+                // Check if serial number or registration number already exists
+                if (checkIfSerialNumberExists(student.serialNumber))
+                {
+                    printf("Error: Student with the same serial number already exists.\n");
+                }
+                else if (checkIfRegNumberExists(student.regNumber))
+                {
+                    printf("Error: Student with the same registration number already exists.\n");
+                }
+                else
+                {
+                    // Append new student data to file
+                    fprintf(file, "%d\t\t\t\t\t\t %s\t\t\t\t\t\t %s %s\n", student.serialNumber, student.regNumber, student.firstName, student.lastName);
+                    fflush(file);
+                    printf("Student Added Successfully\n");
+                }
+
+                // Clear the buffer
+                memset(buffer, 0, BUFFER_SIZE);
+
+                // Receive data from the client
+                if (recvfrom(server_fd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&address, (socklen_t *)&addrlen) < 0)
+                {
+                    perror("recvfrom failed");
+                    exit(EXIT_FAILURE);
+                }
+            }
+
+            // Terminate the child process
+            exit(EXIT_SUCCESS);
         }
         else
         {
-            // Write the student data to the file
-            fprintf(file, "%d\t\t\t\t\t\t %s\t\t\t\t\t\t %s %s\n", student.serialNumber, student.regNumber, student.firstName, student.lastName);
-            fflush(file);
-            printf("Student Added Successfully\n");
+            // Parent process
+            client_number++; // Increment client number
         }
     }
 
+    // Close file
     fclose(file);
+
     return 0;
 }
