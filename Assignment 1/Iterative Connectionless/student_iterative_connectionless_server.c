@@ -84,6 +84,8 @@ int main () {
         exit(EXIT_FAILURE);
     }
 
+    printf("Socket created successfully.\n");
+
     // Set socket options
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &(int){1}, sizeof(int)))
     {
@@ -103,43 +105,45 @@ int main () {
         exit(EXIT_FAILURE);
     }
 
+    printf("Socket binded to port %d.\n", PORT);
+
     // Wait for data to be received from the client
     while (1) {
-    printf("Waiting for data...\n");
+        printf("Waiting for data...\n");
 
-    // Clear the buffer
-    memset(buffer, 0, BUFFER_SIZE);
+        // Clear the buffer
+        memset(buffer, 0, BUFFER_SIZE);
 
-    // Receive data from the client
-    if (recvfrom(server_fd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&address, (socklen_t *)&addrlen) < 0)
-    {
-        perror("recvfrom failed");
-        exit(EXIT_FAILURE);
-    }
+        // Receive data from the client
+        if (recvfrom(server_fd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&address, (socklen_t *)&addrlen) < 0)
+        {
+            perror("recvfrom failed");
+            exit(EXIT_FAILURE);
+        }
 
-    printf("Data received: %s\n", buffer);
+        printf("Data received: %s\n", buffer);
 
-    // Parse the received data
-    sscanf(buffer, "%d %s %s %s", &student.serialNumber, student.regNumber, student.firstName, student.lastName);
+        // Parse the received data
+        sscanf(buffer, "%d %s %s %s", &student.serialNumber, student.regNumber, student.firstName, student.lastName);
 
-    // Check if the student already exists
-    if (checkIfSerialNumberExists(student.serialNumber))
-    {
-        printf("Error: Student with the same serial number already exists.\n");
-    }
-    else if (checkIfRegNumberExists(student.regNumber))
-    {
-        printf("Error: Student with the same registration number already exists.\n");
-    }
-    else 
-    {
-        // Write the student data to the file
-        fprintf(file, "%d\t\t\t\t\t\t %s\t\t\t\t\t\t %s %s\n", student.serialNumber, student.regNumber, student.firstName, student.lastName);
-        fflush(file);
-        printf("Student Added Successfully\n");
+        // Check if the student already exists
+        if (checkIfSerialNumberExists(student.serialNumber))
+        {
+            printf("Error: Student with the same serial number already exists.\n");
+        }
+        else if (checkIfRegNumberExists(student.regNumber))
+        {
+            printf("Error: Student with the same registration number already exists.\n");
+        }
+        else 
+        {
+            // Write the student data to the file
+            fprintf(file, "%d\t\t\t\t\t\t %s\t\t\t\t\t\t %s %s\n", student.serialNumber, student.regNumber, student.firstName, student.lastName);
+            fflush(file);
+            printf("Student Added Successfully\n");
+        }
     }
     
-    }
     fclose(file);
     return 0;
 }
