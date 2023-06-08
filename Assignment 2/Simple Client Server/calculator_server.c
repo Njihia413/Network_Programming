@@ -20,12 +20,14 @@ int main(int argc, char const *argv[]) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
+    printf("Socket created successfully.\n");
 
     // Forcefully attaching socket to the port 8080
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
+
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
@@ -35,6 +37,7 @@ int main(int argc, char const *argv[]) {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
+    printf("Socket binded to port %d.\n", PORT);
 
     // Listen for incoming connections
     if (listen(server_fd, 3) < 0) {
@@ -42,7 +45,6 @@ int main(int argc, char const *argv[]) {
         exit(EXIT_FAILURE);
     }
     printf("Server is listening on port %d...\n", PORT);
-
 
     // Accept incoming connection
     if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
@@ -53,7 +55,7 @@ int main(int argc, char const *argv[]) {
 
     // Read data from the client
     valread = read(new_socket, buffer, 1024);
-    printf("Data received from client.\n");
+    printf("Data received from client: %s\n", buffer);
 
     // Parse the input from the client
     int num1, num2;
@@ -77,7 +79,7 @@ int main(int argc, char const *argv[]) {
             break;
         default:
             result = 0;
-        }
+    }
 
     // Construct the response string
     snprintf(response, 1024, "%d\n", result);
