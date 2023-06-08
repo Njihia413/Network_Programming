@@ -20,12 +20,14 @@ int main(int argc, char const *argv[]) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
+    printf("Socket created successfully.\n");
 
     // Forcefully attaching socket to the port 8080
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
+
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
@@ -35,6 +37,7 @@ int main(int argc, char const *argv[]) {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
+    printf("Socket binded to port %d.\n", PORT);
 
     while (1) {
         printf("Waiting for data...\n");
