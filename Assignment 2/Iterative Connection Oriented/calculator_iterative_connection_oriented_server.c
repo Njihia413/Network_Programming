@@ -20,12 +20,14 @@ int main(int argc, char const *argv[]) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
+    printf("Socket created successfully.\n");
 
     // Forcefully attaching socket to the port 8080
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
+
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
@@ -35,6 +37,7 @@ int main(int argc, char const *argv[]) {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
+    printf("Socket binded to port %d.\n", PORT);
 
     // Listen for incoming connections
     if (listen(server_fd, 3) < 0) {
@@ -42,12 +45,10 @@ int main(int argc, char const *argv[]) {
         exit(EXIT_FAILURE);
     }
     printf("Server is listening on port %d...\n", PORT);
-    
 
     while (1) {
         // Accept incoming connection
-        if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0)
-        {
+        if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
             perror("accept failed");
             exit(EXIT_FAILURE);
         }
@@ -58,9 +59,9 @@ int main(int argc, char const *argv[]) {
             // Read incoming data
             char buffer[1024] = {0};
             valread = read(new_socket, buffer, 1024);
+
             // Check if connection closed by client
-            if (valread == 0) 
-            {
+            if (valread == 0) {
                 printf("Connection closed by client.\n");
                 break;
             }
@@ -95,9 +96,9 @@ int main(int argc, char const *argv[]) {
 
             // Send the response back to the client
             send(new_socket, response, strlen(response), 0);
-            printf("Response sent: %s", response);
+            printf("Response sent: %s\n", response);
         }
-        
+
         // Close the connection
         close(new_socket);
     }
