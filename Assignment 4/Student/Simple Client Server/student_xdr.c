@@ -6,7 +6,7 @@
 #include "student.h"
 
 bool_t
-xdr_student (XDR *xdrs, student *objp)
+xdr_Student (XDR *xdrs, Student *objp)
 {
 	register int32_t *buf;
 

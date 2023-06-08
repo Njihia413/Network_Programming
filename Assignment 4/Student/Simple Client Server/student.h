@@ -14,37 +14,37 @@ extern "C" {
 #endif
 
 
-struct student {
+struct Student {
 	int serialNumber;
 	char *regNumber;
 	char *firstName;
 	char *lastName;
 };
-typedef struct student student;
+typedef struct Student Student;
 
-#define STUDENT 0x20000001
-#define STUDENT_PROG 1
+#define STUDENTPROG 0x20000001
+#define STUDENTVERS 1
 
 #if defined(__STDC__) || defined(__cplusplus)
-#define ADD_STUDENT 1
-extern  int * add_student_1(student *, CLIENT *);
-extern  int * add_student_1_svc(student *, struct svc_req *);
-extern int student_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
+#define add_student 1
+extern  int * add_student_1(Student *, CLIENT *);
+extern  int * add_student_1_svc(Student *, struct svc_req *);
+extern int studentprog_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
-#define ADD_STUDENT 1
+#define add_student 1
 extern  int * add_student_1();
 extern  int * add_student_1_svc();
-extern int student_1_freeresult ();
+extern int studentprog_1_freeresult ();
 #endif /* K&R C */
 
 /* the xdr functions */
 
 #if defined(__STDC__) || defined(__cplusplus)
-extern  bool_t xdr_student (XDR *, student*);
+extern  bool_t xdr_Student (XDR *, Student*);
 
 #else /* K&R C */
-extern bool_t xdr_student ();
+extern bool_t xdr_Student ();
 
 #endif /* K&R C */
 

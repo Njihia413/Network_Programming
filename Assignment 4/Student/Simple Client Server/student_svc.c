@@ -17,10 +17,10 @@
 #endif
 
 static void
-student_1(struct svc_req *rqstp, register SVCXPRT *transp)
+studentprog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 {
 	union {
-		student add_student_1_arg;
+		Student add_student_1_arg;
 	} argument;
 	char *result;
 	xdrproc_t _xdr_argument, _xdr_result;
@@ -31,8 +31,8 @@ student_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		(void) svc_sendreply (transp, (xdrproc_t) xdr_void, (char *)NULL);
 		return;
 
-	case ADD_STUDENT:
-		_xdr_argument = (xdrproc_t) xdr_student;
+	case add_student:
+		_xdr_argument = (xdrproc_t) xdr_Student;
 		_xdr_result = (xdrproc_t) xdr_int;
 		local = (char *(*)(char *, struct svc_req *)) add_student_1_svc;
 		break;
@@ -62,15 +62,15 @@ main (int argc, char **argv)
 {
 	register SVCXPRT *transp;
 
-	pmap_unset (STUDENT, STUDENT_PROG);
+	pmap_unset (STUDENTPROG, STUDENTVERS);
 
 	transp = svcudp_create(RPC_ANYSOCK);
 	if (transp == NULL) {
 		fprintf (stderr, "%s", "cannot create udp service.");
 		exit(1);
 	}
-	if (!svc_register(transp, STUDENT, STUDENT_PROG, student_1, IPPROTO_UDP)) {
-		fprintf (stderr, "%s", "unable to register (STUDENT, STUDENT_PROG, udp).");
+	if (!svc_register(transp, STUDENTPROG, STUDENTVERS, studentprog_1, IPPROTO_UDP)) {
+		fprintf (stderr, "%s", "unable to register (STUDENTPROG, STUDENTVERS, udp).");
 		exit(1);
 	}
 
@@ -79,13 +79,13 @@ main (int argc, char **argv)
 		fprintf (stderr, "%s", "cannot create tcp service.");
 		exit(1);
 	}
-	if (!svc_register(transp, STUDENT, STUDENT_PROG, student_1, IPPROTO_TCP)) {
-		fprintf (stderr, "%s", "unable to register (STUDENT, STUDENT_PROG, tcp).");
+	if (!svc_register(transp, STUDENTPROG, STUDENTVERS, studentprog_1, IPPROTO_TCP)) {
+		fprintf (stderr, "%s", "unable to register (STUDENTPROG, STUDENTVERS, tcp).");
 		exit(1);
 	}
 
 	svc_run ();
-	fprintf (stderr, "%s", "svc_run returned");
+	//fprintf (stderr, "%s", "svc_run returned");
 	exit (1);
 	/* NOTREACHED */
 }
