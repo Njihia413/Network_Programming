@@ -84,6 +84,8 @@ int main () {
         exit(EXIT_FAILURE);
     }
 
+    printf("Socket created successfully.\n");
+
     // Set socket options
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
     {
@@ -102,6 +104,8 @@ int main () {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
+
+    printf("Socket binded to port %d.\n", PORT);
 
     // Listen for incoming connections
     if (listen(server_fd, 3) < 0)
@@ -126,7 +130,7 @@ int main () {
     // Read incoming data from client
     valread = read(new_socket, file_data, sizeof(file_data));
     sscanf(file_data, "%d %s %s %s", &student.serialNumber, student.regNumber, student.firstName, student.lastName);
-    printf("Data received from client.\n");
+    printf("Data received from client: %d %s %s %s\n", student.serialNumber, student.regNumber, student.firstName, student.lastName);
 
     // Check if student already exists
     if (checkIfSerialNumberExists(student.serialNumber))
@@ -158,6 +162,3 @@ int main () {
 
     return 0;
 }
-
-
-
