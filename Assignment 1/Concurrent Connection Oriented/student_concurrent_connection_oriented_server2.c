@@ -94,18 +94,18 @@ void handle_connection(int client_sock, int client_number)
         // Check if serial number or registration number already exists
         if (checkIfSerialNumberExists(student.serialNumber))
         {
-            printf("Error: Student with the same serial number already exists.\n");
+            send(client_sock, "Error: Student with the same serial number already exists.\n", strlen("Error: Student with the same serial number already exists.\n"), 0);
         }
         else if (checkIfRegNumberExists(student.regNumber))
         {
-            printf("Error: Student with the same registration number already exists.\n");
+            send(client_sock, "Error: Student with the same registration number already exists.\n", strlen("Error: Student with the same registration number already exists.\n"), 0);
         }
         else
         {
             // Append new student data to file
             fprintf(file, "%d\t\t\t\t\t\t %s\t\t\t\t\t\t %s %s\n", student.serialNumber, student.regNumber, student.firstName, student.lastName);
             fflush(file);
-            printf("Student Added Successfully\n");
+            send(client_sock, "Student Added Successfully\n", strlen("Student Added Successfully\n"), 0);
         }
     }
 
