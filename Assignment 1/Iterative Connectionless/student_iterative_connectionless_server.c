@@ -129,18 +129,34 @@ int main () {
         // Check if the student already exists
         if (checkIfSerialNumberExists(student.serialNumber))
         {
-            printf("Error: Student with the same serial number already exists.\n");
+            char error_message[] = "Error: Student with the same serial number already exists.";
+            if (sendto(server_fd, error_message, strlen(error_message), 0, (struct sockaddr *)&address, addrlen) < 0)
+            {
+                perror("sendto failed");
+                exit(EXIT_FAILURE);
+            }
         }
         else if (checkIfRegNumberExists(student.regNumber))
         {
-            printf("Error: Student with the same registration number already exists.\n");
+            char error_message[] = "Error: Student with the same registration number already exists.";
+            if (sendto(server_fd, error_message, strlen(error_message), 0, (struct sockaddr *)&address, addrlen) < 0)
+            {
+                perror("sendto failed");
+                exit(EXIT_FAILURE);
+            }
         }
         else 
         {
             // Write the student data to the file
             fprintf(file, "%d\t\t\t\t\t\t %s\t\t\t\t\t\t %s %s\n", student.serialNumber, student.regNumber, student.firstName, student.lastName);
             fflush(file);
-            printf("Student Added Successfully\n");
+
+            char success_message[] = "Student Added Successfully";
+            if (sendto(server_fd, success_message, strlen(success_message), 0, (struct sockaddr *)&address, addrlen) < 0)
+            {
+                perror("sendto failed");
+                exit(EXIT_FAILURE);
+            }
         }
     }
     
