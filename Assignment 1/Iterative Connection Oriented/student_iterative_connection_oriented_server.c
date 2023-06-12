@@ -8,6 +8,7 @@
 #define MAX_NAME_LENGTH 50
 #define FILENAME "student.txt"
 #define PORT 8080
+#define MAX_CLIENTS 10
 
 struct Student
 {
@@ -115,7 +116,7 @@ int main()
     printf("Socket binded to port %d.\n", PORT);
 
     // Listen for incoming connections
-    if (listen(server_fd, 3) < 0)
+    if (listen(server_fd, MAX_CLIENTS) < 0)
     {
         perror("listen failed");
         exit(EXIT_FAILURE);
@@ -153,24 +154,28 @@ int main()
             // Check if serial number or registration number already exists
             if (checkIfSerialNumberExists(student.serialNumber))
             {
-                printf("Error: Student with the same serial number already exists.\n");
+                char error_message[] = "Error: Student with the same serial number already exists.";
+                send(new_socket, error_message, strlen(error_message), 0);
             }
             else if (checkIfRegNumberExists(student.regNumber))
             {
-                printf("Error: Student with the same registration number already exists.\n");
+                char error_message[] = "Error: Student with the same registration number already exists.";
+                send(new_socket, error_message, strlen(error_message), 0);
             }
             else
             {
                 // Append new student data to file
                 fprintf(file, "%d\t\t\t\t\t\t %s\t\t\t\t\t\t %s %s\n", student.serialNumber, student.regNumber, student.firstName, student.lastName);
                 fflush(file);
-                printf("Student Added Successfully\n");
+                char success_message[] = "Student Added Successfully";
+                send(new_socket, success_message, strlen(success_message), 0);
             }
         }
+    }
 
         // Close socket
         close(new_socket);
-    }
+    
 
     // Close file
     fclose(file);
