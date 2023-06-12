@@ -11,6 +11,7 @@
 #define FILENAME "student.txt"
 #define PORT 8080
 #define BUFFER_SIZE 1024
+#define MAX_CLIENTS 10
 
 struct Student
 {
@@ -59,11 +60,8 @@ int checkIfRegNumberExists(char *regNumber)
     return 0;
 }
 
-int main()
+void handle_connection(int client_sock, int client_number)
 {
-    struct sockaddr_in address;
-    int server_fd, valread;
-    int addrlen = sizeof(address);
     char buffer[BUFFER_SIZE] = {0};
     struct Student student;
     FILE *file;
@@ -76,27 +74,67 @@ int main()
         exit(1);
     }
 
-    // Check if file is empty
-    fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
-    if (file_size == 0)
+    // Loop to keep reading data until client closes connection
+    while (1)
     {
-        // Write Column Headers
-        fprintf(file, "Serial Number\t\t\t Registration Number\t\t\t\t\t Name\n");
-    }
-    rewind(file);
+        // Read incoming data
+        memset(buffer, 0, BUFFER_SIZE);
+        ssize_t valread = read(client_sock, buffer, BUFFER_SIZE);
+        // Check if connection closed by client
+        if (valread == 0)
+        {
+            printf("Connection closed by client %d.\n", client_number);
+            break;
+        }
+        printf("Data received from client %d: %s\n", client_number, buffer);
 
-    // Create socket file descriptor
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+        // Parse student data from incoming message
+        sscanf(buffer, "%d %s %s %s", &student.serialNumber, student.regNumber, student.firstName, student.lastName);
+
+        // Check if serial number or registration number already exists
+        if (checkIfSerialNumberExists(student.serialNumber))
+        {
+            printf("Error: Student with the same serial number already exists.\n");
+        }
+        else if (checkIfRegNumberExists(student.regNumber))
+        {
+            printf("Error: Student with the same registration number already exists.\n");
+        }
+        else
+        {
+            // Append new student data to file
+            fprintf(file, "%d\t\t\t\t\t\t %s\t\t\t\t\t\t %s %s\n", student.serialNumber, student.regNumber, student.firstName, student.lastName);
+            fflush(file);
+            printf("Student Added Successfully\n");
+        }
+    }
+
+    // Close file
+    fclose(file);
+
+    // Close socket
+    close(client_sock);
+    exit(EXIT_SUCCESS);
+}
+
+int main()
+{
+    struct sockaddr_in address;
+    int master_sock, client_sock;
+    int addrlen = sizeof(address);
+    char buffer[BUFFER_SIZE] = {0};
+
+    // Create master socket 
+    if ((master_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
 
-    printf("Socket created successfully.\n");
+    printf("Master socket created successfully.\n");
 
     // Set socket options
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &(int){1}, sizeof(int)))
+    if (setsockopt(master_sock, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &(int){1}, sizeof(int)))
     {
         perror("setsockopt failed");
         exit(EXIT_FAILURE);
@@ -107,17 +145,17 @@ int main()
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
 
-    // Bind the socket to the specified address and port
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
+    // Bind the master socket to the specified address and port
+    if (bind(master_sock, (struct sockaddr *)&address, sizeof(address)) < 0)
     {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
 
-    printf("Socket binded to port %d.\n", PORT);
+    printf("Master socket binded to port %d.\n", PORT);
 
     // Listen for incoming connections
-    if (listen(server_fd, 3) < 0)
+    if (listen(master_sock, MAX_CLIENTS) < 0)
     {
         perror("listen failed");
         exit(EXIT_FAILURE);
@@ -129,8 +167,8 @@ int main()
 
     while (1)
     {
-        int new_socket;
-        if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
+        // Accept incoming connection
+        if ((client_sock = accept(master_sock, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
         {
             perror("accept failed");
             exit(EXIT_FAILURE);
@@ -138,70 +176,34 @@ int main()
 
         printf("Connection established with client %d.\n", client_number);
 
-        // Fork a child process to handle the client request
-        pid_t child_pid = fork();
+        // Fork a slave process to handle the client request
+        pid_t slave_pid = fork();
 
-        if (child_pid < 0)
+        if (slave_pid < 0)
         {
             perror("fork failed");
             exit(EXIT_FAILURE);
         }
-        else if (child_pid == 0)
+        else if (slave_pid == 0)
         {
-            // Child process
-            // Close the original socket in the child process
-            close(server_fd);
+            // Slave process
+            // Close the master socket in the slave process
+            close(master_sock);
 
-            // Loop to keep reading data until client closes connection
-            while (1)
-            {
-                // Read incoming data
-                memset(buffer, 0, BUFFER_SIZE);
-                valread = read(new_socket, buffer, BUFFER_SIZE);
-                // Check if connection closed by client
-                if (valread == 0)
-                {
-                    printf("Connection closed by client %d.\n", client_number);
-                    break;
-                }
-                printf("Data received from client %d: %s\n", client_number, buffer);
+            // Handle client connection
+            handle_connection(client_sock, client_number);
 
-                // Parse student data from incoming message
-                sscanf(buffer, "%d %s %s %s", &student.serialNumber, student.regNumber, student.firstName, student.lastName);
-
-                // Check if serial number or registration number already exists
-                if (checkIfSerialNumberExists(student.serialNumber))
-                {
-                    printf("Error: Student with the same serial number already exists.\n");
-                }
-                else if (checkIfRegNumberExists(student.regNumber))
-                {
-                    printf("Error: Student with the same registration number already exists.\n");
-                }
-                else
-                {
-                    // Append new student data to file
-                    fprintf(file, "%d\t\t\t\t\t\t %s\t\t\t\t\t\t %s %s\n", student.serialNumber, student.regNumber, student.firstName, student.lastName);
-                    fflush(file);
-                    printf("Student Added Successfully\n");
-                }
-            }
-
-            // Close socket in the child process
-            close(new_socket);
+            // Exit the slave process
             exit(EXIT_SUCCESS);
         }
         else
         {
             // Parent process
-            // Close the new_socket in the parent process
-            close(new_socket);
+            // Close the client socket in the parent process
+            close(client_sock);
             client_number++; // Increment client number
         }
     }
-
-    // Close file
-    fclose(file);
 
     return 0;
 }
