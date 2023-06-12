@@ -55,28 +55,27 @@ int main () {
         return -1;
     }
 
-    while(1) {
-        // Get the student's details from the user
-        printf("Enter the student's details:\n");
-        printf("Serial Number: ");
-        scanf("%d", &student.serialNumber);
-        printf("Registration Number: ");
-        scanf("%s", student.regNumber);
-        printf("First Name: ");
-        scanf("%s", student.firstName);
-        printf("Last Name: ");
-        scanf("%s", student.lastName);
+    // Get the student's details from the user
+    printf("Enter the student's details:\n");
+    printf("Serial Number: ");
+    scanf("%d", &student.serialNumber);
+    printf("Registration Number: ");
+    scanf("%s", student.regNumber);
+    printf("First Name: ");
+    scanf("%s", student.firstName);
+    printf("Last Name: ");
+    scanf("%s", student.lastName);
 
-        // Send the student's details to the server
-        sprintf(buffer, "%d %s %s %s", student.serialNumber, student.regNumber, student.firstName, student.lastName);
-        sendto(sock , buffer , strlen(buffer) , 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-        printf("Student data sent successfully.\n");
+    // Send the student's details to the server
+    sprintf(buffer, "%d %s %s %s", student.serialNumber, student.regNumber, student.firstName, student.lastName);
+    sendto(sock , buffer , strlen(buffer) , 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+    printf("Student data sent successfully.\n");
 
-        // Receive the response from the server
-        int serv_addr_len = sizeof(serv_addr);
-        valread = recvfrom(sock, buffer, 1024, 0, (struct sockaddr *)&serv_addr, &serv_addr_len);
-        printf("%s\n",buffer );
-        printf("\n");
-    }
+    // Receive the response from the server
+    int serv_addr_len = sizeof(serv_addr);
+    valread = recvfrom(sock, buffer, 1024, 0, (struct sockaddr *)&serv_addr, &serv_addr_len);
+    printf("%s\n",buffer );
+    printf("\n");
+    
     return 0;
 }
