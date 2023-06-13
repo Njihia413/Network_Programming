@@ -120,7 +120,7 @@ void handle_connection(int client_sock, int client_number)
 int main()
 {
     struct sockaddr_in address;
-    int master_sock, client_sock;
+    int master_sock, slave_sock;
     int addrlen = sizeof(address);
     char buffer[BUFFER_SIZE] = {0};
 
@@ -168,7 +168,7 @@ int main()
     while (1)
     {
         // Accept incoming connection
-        if ((client_sock = accept(master_sock, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
+        if ((slave_sock = accept(master_sock, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
         {
             perror("accept failed");
             exit(EXIT_FAILURE);
@@ -191,7 +191,7 @@ int main()
             close(master_sock);
 
             // Handle client connection
-            handle_connection(client_sock, client_number);
+            handle_connection(slave_sock, client_number);
 
             // Exit the slave process
             exit(EXIT_SUCCESS);
@@ -200,7 +200,7 @@ int main()
         {
             // Parent process
             // Close the client socket in the parent process
-            close(client_sock);
+            close(slave_sock);
             client_number++; // Increment client number
         }
     }
