@@ -62,7 +62,7 @@ int checkIfRegNumberExists(char *regNumber)
 int main()
 {
     struct sockaddr_in address;
-    int server_fd;
+    int master_socket;
     int addrlen = sizeof(address);
     char buffer[BUFFER_SIZE] = {0};
     struct Student student;
@@ -87,13 +87,13 @@ int main()
     rewind(file);
 
     // Create socket file descriptor
-    if ((server_fd = socket(AF_INET, SOCK_DGRAM, 0)) == 0)
+    if ((master_socket = socket(AF_INET, SOCK_DGRAM, 0)) == 0)
     {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
 
-    printf("Socket created successfully.\n");
+    printf("Master Socket created successfully.\n");
 
     // Set address and port
     address.sin_family = AF_INET;
@@ -101,34 +101,34 @@ int main()
     address.sin_port = htons(PORT);
 
     // Bind the socket to the specified address and port
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
+    if (bind(master_socket, (struct sockaddr *)&address, sizeof(address)) < 0)
     {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
 
-    printf("Socket binded to port %d.\n", PORT);
+    printf("Master Socket binded to port %d.\n", PORT);
 
     while (1)
     {
         printf("Waiting for data...\n");
         // Receive data from the client
         memset(buffer, 0, BUFFER_SIZE);
-        if (recvfrom(server_fd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&address, (socklen_t *)&addrlen) < 0)
+        if (recvfrom(master_socket, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&address, (socklen_t *)&addrlen) < 0)
         {
             perror("recvfrom failed");
             exit(EXIT_FAILURE);
         }
 
-        // Fork a child process to handle the client request
-        pid_t child_pid = fork();
+        // Fork a slave process to handle the client request
+        pid_t slave_pid = fork();
 
-        if (child_pid < 0)
+        if (slave_pid < 0)
         {
             perror("fork failed");
             exit(EXIT_FAILURE);
         }
-        else if (child_pid == 0)
+        else if (slave_pid == 0)
         {
             // Child process
             // Loop to keep reading data until client closes connection
@@ -142,18 +142,21 @@ int main()
                 // Check if serial number or registration number already exists
                 if (checkIfSerialNumberExists(student.serialNumber))
                 {
-                    printf("Error: Student with the same serial number already exists.\n");
+                    char errorMsg[] = "Error: Student with the same serial number already exists.\n";
+                    sendto(master_socket, errorMsg, strlen(errorMsg), 0, (struct sockaddr *)&address, addrlen);
                 }
                 else if (checkIfRegNumberExists(student.regNumber))
                 {
-                    printf("Error: Student with the same registration number already exists.\n");
+                    char errorMsg[] = "Error: Student with the same registration number already exists.\n";
+                    sendto(master_socket, errorMsg, strlen(errorMsg), 0, (struct sockaddr *)&address, addrlen);
                 }
                 else
                 {
                     // Append new student data to file
                     fprintf(file, "%d\t\t\t\t\t\t %s\t\t\t\t\t\t %s %s\n", student.serialNumber, student.regNumber, student.firstName, student.lastName);
                     fflush(file);
-                    printf("Student Added Successfully\n");
+                    char successMsg[] = "Student Added Successfully\n";
+                    sendto(master_socket, successMsg, strlen(successMsg), 0, (struct sockaddr *)&address, addrlen);
                     printf("\n");
                 }
 
@@ -161,14 +164,14 @@ int main()
                 memset(buffer, 0, BUFFER_SIZE);
 
                 // Receive data from the client
-                if (recvfrom(server_fd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&address, (socklen_t *)&addrlen) < 0)
+                if (recvfrom(master_socket, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&address, (socklen_t *)&addrlen) < 0)
                 {
                     perror("recvfrom failed");
                     exit(EXIT_FAILURE);
                 }
             }
 
-            // Terminate the child process
+            // Terminate the slave process
             exit(EXIT_SUCCESS);
         }
     }
