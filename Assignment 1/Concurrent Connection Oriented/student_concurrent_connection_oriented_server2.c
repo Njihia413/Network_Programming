@@ -199,7 +199,7 @@ int main()
         else
         {
             // Parent process
-            // Close the client socket in the parent process
+            // Close the slave socket in the parent process
             close(slave_sock);
             client_number++; // Increment client number
         }
