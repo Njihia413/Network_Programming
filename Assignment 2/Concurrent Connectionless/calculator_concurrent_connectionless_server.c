@@ -8,7 +8,7 @@
 #define PORT 8080
 
 int main(int argc, char const *argv[]) {
-    int server_fd, valread;
+    int master_socket, valread;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
@@ -16,14 +16,14 @@ int main(int argc, char const *argv[]) {
     char response[1024] = {0};
 
     // Creating socket file descriptor
-    if ((server_fd = socket(AF_INET, SOCK_DGRAM, 0)) == 0) {
+    if ((master_socket = socket(AF_INET, SOCK_DGRAM, 0)) == 0) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
-    printf("Socket created successfully.\n");
+    printf("Master Socket created successfully.\n");
 
     // Forcefully attaching socket to the port 8080
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
+    if (setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
@@ -33,21 +33,21 @@ int main(int argc, char const *argv[]) {
     address.sin_port = htons(PORT);
 
     // Bind the socket to the port 8080
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+    if (bind(master_socket, (struct sockaddr *)&address, sizeof(address)) < 0) {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
-    printf("Socket binded to port %d.\n", PORT);
+    printf("Master Socket binded to port %d.\n", PORT);
 
     while (1) {
         printf("Waiting for data...\n");
 
         while (1) {
             // Receive data from the client
-            valread = recvfrom(server_fd, buffer, 1024, 0, (struct sockaddr *)&address, (socklen_t*)&addrlen);
+            valread = recvfrom(master_socket, buffer, 1024, 0, (struct sockaddr *)&address, (socklen_t*)&addrlen);
             printf("Data received from client: %s\n", buffer);
 
-            // Create a child process to handle the client request
+            // Create a slave process to handle the client request
             if (fork() == 0) {
                 // Parse the input from the client
                 int num1, num2;
@@ -77,7 +77,7 @@ int main(int argc, char const *argv[]) {
                 snprintf(response, 1024, "%d\n", result);
 
                 // Send the response back to the client
-                sendto(server_fd, response, strlen(response), 0, (struct sockaddr *)&address, addrlen);
+                sendto(master_socket, response, strlen(response), 0, (struct sockaddr *)&address, addrlen);
                 printf("Response sent to client: %s\n", response);
 
                 // Clear the buffer
@@ -85,13 +85,13 @@ int main(int argc, char const *argv[]) {
             }
         }
 
-        // Close the child process
+        // Close the slave process
         exit(EXIT_SUCCESS);
 
     }
 
-    // Close the socket
-    close(server_fd);
+    // Close master the socket
+    close(master_socket);
 
     return 0;
 }
