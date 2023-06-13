@@ -43,6 +43,8 @@ int main(int argc, char const *argv[]) {
     scanf("%d", &num2);
 
     // Check if the operator entered is valid
+    int validOperator = 1; // Flag variable to indicate operator validity
+
     switch (op) {
         case '+':
         case '-':
@@ -51,7 +53,12 @@ int main(int argc, char const *argv[]) {
             break;
         default:
             printf("Invalid operator\n");
-            continue;
+            validOperator = 0; // Set the flag to indicate invalid operator
+    }
+
+    // If the operator is invalid, exit the program
+    if (!validOperator) {
+        return -1;
     }
 
     // Construct the request string
@@ -60,23 +67,21 @@ int main(int argc, char const *argv[]) {
     // Send the request to the server
     if (sendto(sock, buffer, strlen(buffer), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
         printf("\nSendto failed\n");
-        continue;
+        return -1;
     }
 
     // Receive the response from the server
     socklen_t serv_addr_len = sizeof(serv_addr);
     if (recvfrom(sock, buffer, 1024, 0, (struct sockaddr *)&serv_addr, &serv_addr_len) < 0) {
         printf("\nRecvfrom failed\n");
-        continue;
+        return -1;
     }
 
     // Extract the result from the response
     int result = atoi(buffer);
 
     // Display the result to the user
-    printf("Result: %d\n", result);
-    printf("\n");
-    
+    printf("Result: %d\n\n", result);
 
     return 0;
 }
